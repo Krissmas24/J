@@ -7,6 +7,7 @@ class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("J")
+        self.root.wm_class = "J"
         self.root.configure(bg=Theme.BG)
         self.root.overrideredirect(True)
         self.root.attributes('-topmost', True)
