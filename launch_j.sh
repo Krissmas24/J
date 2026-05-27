@@ -3,15 +3,21 @@
 # Ensures only one instance is running
 
 PROJECT_DIR="/home/krissmas01/j_macro"
+LOG_FILE="/home/krissmas01/.fisch_macro/launcher.log"
+
+mkdir -p "$(dirname "$LOG_FILE")"
+echo "[$(date)] Launching J Macro..." >> "$LOG_FILE"
 
 # Check if already running
-if pgrep -f "python3 $PROJECT_DIR/main.py" > /dev/null; then
-    # If using Hyprland, we could focus the window, but for now just exit
+PID=$(pgrep -f "python3 $PROJECT_DIR/main.py")
+if [ -n "$PID" ]; then
+    echo "[$(date)] Already running with PID $PID. Exiting." >> "$LOG_FILE"
     exit 0
 fi
 
-# Change to project directory to ensure relative imports work if any
-cd "$PROJECT_DIR" || exit
+# Change to project directory
+cd "$PROJECT_DIR" || { echo "[$(date)] Failed to cd to $PROJECT_DIR" >> "$LOG_FILE"; exit 1; }
 
-# Run the app using the absolute path to python
-/usr/bin/python3 main.py &
+# Run the app
+/usr/bin/python3 main.py >> "$LOG_FILE" 2>&1 &
+echo "[$(date)] J Macro started in background." >> "$LOG_FILE"

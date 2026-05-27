@@ -74,89 +74,75 @@ class SplashScreen:
         self.animate()
 
     def draw_split_j(self, x, y):
-        # Splatter effect (random polygons for "splat")
-        random.seed(42) # Consistent splatter
+        # Splatter effect
+        random.seed(42)
         for _ in range(12):
             sx = x + random.randint(-60, 60)
             sy = y + random.randint(-60, 60)
             sr = random.randint(5, 25)
-            # Inverted logic: where J is white (bottom), splash is black. Where J is black (top), splash is white.
             color = Theme.BLACK if sy > y else Theme.FG
             self.canvas.create_oval(sx-sr, sy-sr, sx+sr, sy+sr, fill=color, outline="")
 
         # Italic J split color
-        # Top half (Black)
         self.canvas.create_text(x, y, text="J", font=Theme.FONT_LOGO, fill=Theme.BLACK, anchor="center")
-        # Mask bottom half
         self.canvas.create_rectangle(x-100, y, x+100, y+100, fill=Theme.DARK_GREY, outline="")
-        # Bottom half (White)
         self.canvas.create_text(x, y, text="J", font=Theme.FONT_LOGO, fill=Theme.FG, anchor="center")
-        # Mask top half
         self.canvas.create_rectangle(x-100, y-100, x+100, y, fill=Theme.DARK_GREY, outline="")
 
     def draw_yin_yang(self, cx, cy, r, alpha=1.0):
-        # Dullness logic (50% dullness = greyish/transparent)
         fg = Theme.FG if alpha > 0.5 else "#888888"
         bg = Theme.BLACK if alpha > 0.5 else "#333333"
         accent = Theme.ACCENT if alpha > 0.5 else "#997A00"
 
-        # Main circles
         self.canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill=fg, outline=accent, width=2)
         self.canvas.create_arc(cx-r, cy-r, cx+r, cy+r, start=90, extent=180, fill=bg, outline="")
         
-        # Eyes
         r2 = r / 2
-        self.canvas.create_oval(cx-r2, cy-r-r2, cx+r2, cy-r+r2, fill=fg, outline="") # Needs adjustment for center
-        # Simplified eyes for procedural animation
-        self.canvas.create_oval(cx-r2/2, cy-r2-r2/2, cx+r2/2, cy-r2+r2/2, fill=bg, outline="")
-        self.canvas.create_oval(cx-r2/2, cy+r2-r2/2, cx+r2/2, cy+r2+r2/2, fill=fg, outline="")
+        self.canvas.create_oval(cx-r/4, cy-r2-r/4, cx+r/4, cy-r2+r/4, fill=fg, outline="")
+        self.canvas.create_oval(cx-r/4, cy+r2-r/4, cx+r/4, cy+r2+r/4, fill=bg, outline="")
 
     def animate(self):
-        elapsed = time.time() - self.start_time
-        if elapsed > self.duration:
-            self.finish()
-            return
+        try:
+            elapsed = time.time() - self.start_time
+            if elapsed > self.duration:
+                print("Splash duration reached, finishing...")
+                self.finish()
+                return
 
-        self.canvas.delete("all")
-        
-        # Draw Version (Bottom Left)
-        self.canvas.create_text(10, self.h-10, text=Theme.VERSION, font=("Arial", 8), fill="#555555", anchor="sw")
+            self.canvas.delete("all")
+            self.canvas.create_text(10, self.h-10, text=Theme.VERSION, font=("Arial", 8), fill="#555555", anchor="sw")
 
-        cx, cy = self.w // 2, self.h // 2
-        
-        # 1. Logo and Splat (Always there)
-        self.draw_split_j(cx, cy - 100)
+            cx, cy = self.w // 2, self.h // 2
+            self.draw_split_j(cx, cy - 100)
 
-        # 2. Yin-Yang Hatching Logic
-        # Time segments: 0-2s hatching, 2-3s pulse/dots, 3-5s deflate
-        jitter = random.uniform(-2, 2)
-        alpha = 1.0
+            jitter = random.uniform(-2, 2)
+            alpha = 1.0
 
-        if elapsed < 2.0:
-            # Hatching up: increase size with oscillation
-            progress = elapsed / 2.0
-            self.yy_size = 60 + (self.yy_target_size - 60) * progress + jitter
-        elif elapsed < 3.0:
-            # Pulse at Max Size
-            self.yy_size = self.yy_target_size + random.uniform(-5, 5)
-            if not self.dots_emitted:
-                for _ in range(40):
-                    color = random.choice([Theme.BLACK, Theme.FG])
-                    self.particles.append(Particle(cx, cy + 100, color, self.canvas, self.h - 5))
-                self.dots_emitted = True
-        else:
-            # Deflate: decrease size with oscillation and dullness
-            progress = (elapsed - 3.0) / 2.0
-            self.yy_size = self.yy_target_size - (self.yy_target_size - 60) * progress + jitter
-            alpha = 0.5 # 50% dullness
+            if elapsed < 2.0:
+                progress = elapsed / 2.0
+                self.yy_size = 60 + (self.yy_target_size - 60) * progress + jitter
+            elif elapsed < 3.0:
+                self.yy_size = self.yy_target_size + random.uniform(-5, 5)
+                if not self.dots_emitted:
+                    for _ in range(40):
+                        color = random.choice([Theme.BLACK, Theme.FG])
+                        self.particles.append(Particle(cx, cy + 100, color, self.canvas, self.h - 5))
+                    self.dots_emitted = True
+            else:
+                progress = (elapsed - 3.0) / 2.0
+                self.yy_size = self.yy_target_size - (self.yy_target_size - 60) * progress + jitter
+                alpha = 0.5
 
-        self.draw_yin_yang(cx, cy + 100, self.yy_size / 2, alpha)
+            self.draw_yin_yang(cx, cy + 100, self.yy_size / 2, alpha)
 
-        # 3. Particle Update
-        for p in self.particles:
-            p.update()
+            for p in self.particles:
+                p.update()
 
-        self.win.after(20, self.animate)
+            self.win.after(20, self.animate)
+        except Exception as e:
+            print(f"Animation error: {e}")
+            import traceback
+            traceback.print_exc()
 
     def finish(self):
         self.win.destroy()

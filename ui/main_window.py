@@ -11,6 +11,8 @@ class MainWindow:
         self.root.configure(bg=Theme.BG)
         self.root.overrideredirect(True)
         self.root.attributes('-topmost', True)
+        self.root.lift()
+        self.root.focus_force()
         
         sw = root.winfo_screenwidth()
         sh = root.winfo_screenheight()
