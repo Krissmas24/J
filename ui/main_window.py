@@ -2,6 +2,8 @@ import tkinter as tk
 from ui.theme import Theme
 from core.macro import macro_engine
 from core.database import db
+from ui.settings_win import SettingsWindow
+from ui.dashboard import DashboardWindow
 
 class MainWindow:
     def __init__(self, root):
@@ -26,12 +28,17 @@ class MainWindow:
         # Header
         header = tk.Frame(self.root, bg=Theme.SECONDARY_BG, height=40)
         header.pack(fill="x")
-        
+
         title = tk.Label(header, text="J - MACRO", font=Theme.FONT_BOLD, fg=Theme.ACCENT, bg=Theme.SECONDARY_BG)
         title.pack(side="left", padx=10)
-        
-        close_btn = tk.Button(header, text="✕", command=self.root.destroy, bg=Theme.SECONDARY_BG, fg=Theme.DANGER, bd=0)
-        close_btn.pack(side="right", padx=10)
+
+        # Tools Frame (Header Right)
+        tools = tk.Frame(header, bg=Theme.SECONDARY_BG)
+        tools.pack(side="right", padx=5)
+
+        tk.Button(tools, text="📊", command=lambda: DashboardWindow(self.root), bg=Theme.SECONDARY_BG, fg=Theme.ACCENT, bd=0).pack(side="left", padx=5)
+        tk.Button(tools, text="⚙", command=lambda: SettingsWindow(self.root), bg=Theme.SECONDARY_BG, fg=Theme.ACCENT, bd=0).pack(side="left", padx=5)
+        tk.Button(tools, text="✕", command=self.root.destroy, bg=Theme.SECONDARY_BG, fg=Theme.DANGER, bd=0).pack(side="left", padx=5)
 
         # Status Badge
         self.status_frame = tk.Frame(self.root, bg=Theme.BG, pady=20)

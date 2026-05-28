@@ -41,10 +41,24 @@ class Database:
         self.cursor.execute("INSERT INTO checkpoints (state_json) VALUES (?)", (state_json,))
         self.conn.commit()
 
-    def get_last_checkpoint(self):
-        self.cursor.execute("SELECT state_json FROM checkpoints ORDER BY id DESC LIMIT 1")
-        row = self.cursor.fetchone()
-        return json.loads(row[0]) if row else None
+    def get_stats(self):
+        self.cursor.execute("SELECT COUNT(*) FROM session_history WHERE event_type = 'CATCH'")
+        total_catches = self.cursor.fetchone()[0]
+        
+        self.cursor.execute("SELECT COUNT(*) FROM session_history WHERE event_type = 'BITE'")
+        total_bites = self.cursor.fetchone()[0]
+        
+        success_rate = (total_catches / total_bites * 100) if total_bites > 0 else 0
+        
+        return {
+            "catches": total_catches,
+            "bites": total_bites,
+            "success_rate": round(success_rate, 1)
+        }
+
+    def get_recent_history(self, limit=10):
+        self.cursor.execute("SELECT timestamp, event_type, details FROM session_history ORDER BY id DESC LIMIT ?", (limit,))
+        return self.cursor.fetchall()
 
     def close(self):
         self.conn.close()
